@@ -1,31 +1,47 @@
-import React, { useEffect, useState } from "react";
-import Box from "@mui/material/Box";
-import Card from "@mui/material/Card";
-import CardActions from "@mui/material/CardActions";
-import CardContent from "@mui/material/CardContent";
-import Button from "@mui/material/Button";
-import Typography from "@mui/material/Typography";
-import ImageList from "@mui/material/ImageList";
-import ImageListItem from "@mui/material/ImageListItem";
+import React, { useContext, useEffect, useState } from "react";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
-import IconButton from "@mui/material/IconButton";
-import Select from "@mui/material/Select";
-import MenuItem from "@mui/material/MenuItem";
-import { FormControl, InputLabel } from "@mui/material";
+import {
+  FormControl,
+  InputLabel,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
+  DialogActions,
+  Box,
+  Card,
+  CardActions,
+  CardContent,
+  Button,
+  Typography,
+  ImageList,
+  ImageListItem,
+  IconButton,
+  Select,
+  MenuItem,
+} from "@mui/material";
 import { useNavigate } from "react-router-dom";
-import { fetchProducts } from "../common/services/productService";
+import {
+  deleteProduct,
+  fetchProducts,
+} from "../common/services/productService";
 import { Category } from "./Category";
+import { AuthContext } from "../common/AuthContext";
+import { SnackBar } from "./Snackbar";
 
 export const Products = () => {
-  const user = "admin"; // hardcoded user for now
   const navigate = useNavigate();
+  const { authToken, isAdmin } = useContext(AuthContext);
 
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [products, setProducts] = useState([]);
   const [sortOption, setSortOption] = useState("");
   const [sortedProducts, setSortedProducts] = useState(products);
-  const [filteredProducts, setFilteredProducts] = useState(products);
+  const [open, setOpen] = useState(false);
+  const [selectedProduct, setItemToDelete] = useState({});
+  const [snackbarMessage, setSnackbarMessage] = useState("");
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
 
   function sortByDefault(products) {
     return products;
@@ -55,7 +71,6 @@ export const Products = () => {
   function filterAndSortProducts(products, category, sortOption) {
     const filtered = filterProductsByCategory(products, category);
     const sorted = sortProducts(filtered, sortOption);
-    setFilteredProducts(filtered);
     setSortedProducts(sorted);
   }
 
@@ -85,11 +100,38 @@ export const Products = () => {
   };
 
   useEffect(() => {
-    fetchProducts().then((data) =>{
+    fetchProducts(authToken).then((data) => {
       setProducts(data);
-      filterAndSortProducts(data, selectedCategory, sortOption);;
-  });
-  }, []);
+      filterAndSortProducts(data, selectedCategory, sortOption);
+    });
+  }, [authToken, selectedCategory, sortOption]);
+
+  const handleDelete = (item) => {
+    setItemToDelete(item);
+    setOpen(true);
+  };
+
+  const handleClose = () => {
+    setOpen(false);
+  };
+
+  const handleConfirm = () => {
+    deleteProduct(selectedProduct.id, authToken).then(() => {
+      setSnackbarMessage(
+        `Product ${selectedProduct.name} deleted successfully`
+      );
+      setSnackbarOpen(true);
+      setProducts(
+        products.filter((product) => product.id !== selectedProduct.id)
+      );
+      filterAndSortProducts(
+        products.filter((product) => product.id !== selectedProduct.id),
+        selectedCategory,
+        sortOption
+      );
+    });
+    setOpen(false);
+  };
 
   useEffect(() => {
     filterAndSortProducts(products, selectedCategory, sortOption);
@@ -133,22 +175,62 @@ export const Products = () => {
               width: "100%",
             }}
           >
-            <Button size="small" variant="contained" onClick={() => handleBuyProduct(item.id)}>
+            <Button
+              size="small"
+              variant="contained"
+              onClick={() => handleBuyProduct(item.id)}
+            >
               Buy
             </Button>
-            {user === "admin" && (
+            {isAdmin && (
               <Box>
-                <IconButton aria-label="edit"
-                onClick={() => navigate(`/edit-product/${item.id}`)}>
+                <IconButton
+                  aria-label="edit"
+                  onClick={() => navigate(`/edit-product/${item.id}`)}
+                >
                   <EditIcon />
                 </IconButton>
-                <IconButton aria-label="delete">
+                <IconButton
+                  aria-label="delete"
+                  onClick={() => handleDelete(item)}
+                >
                   <DeleteIcon />
                 </IconButton>
               </Box>
             )}
           </Box>
         </CardActions>
+        <Dialog
+          open={open}
+          onClose={handleClose}
+          slotProps={{
+            backdrop: {
+              sx: {
+                backgroundColor: "transparent",
+              },
+            },
+          }}
+        >
+          <DialogTitle>Confirm deletion of product!</DialogTitle>
+          <DialogContent>
+            <DialogContentText>
+              Are you sure you want to delete the product?
+            </DialogContentText>
+          </DialogContent>
+          <DialogActions>
+            <Button
+              variant="contained"
+              onClick={handleConfirm}
+              color="primary"
+              autoFocus
+            >
+              Ok
+            </Button>
+            <Button variant="outlined" onClick={handleClose} color="primary">
+              Cancel
+            </Button>
+          </DialogActions>
+        </Dialog>
       </React.Fragment>
     );
   };
@@ -168,7 +250,15 @@ export const Products = () => {
         marginTop: 5,
       }}
     >
-      <Category selectedCategory = {selectedCategory} setSelectedCategory={(category) => setSelectedCategory(category)}/>
+      <Category
+        selectedCategory={selectedCategory}
+        setSelectedCategory={(category) => setSelectedCategory(category)}
+      />
+      <SnackBar
+        message={snackbarMessage}
+        open={snackbarOpen}
+        setOpen={setSnackbarOpen}
+      />
       <Box
         sx={{
           display: "flex",
