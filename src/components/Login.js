@@ -27,6 +27,9 @@ const Login = () => {
         if (data.roles && data.roles.includes("ADMIN")) {
           localStorage.setItem("isAdmin", true);
           setIsAdmin(true);
+        } else {
+          localStorage.setItem("isAdmin", false);
+          setIsAdmin(false);
         }
       });
 
