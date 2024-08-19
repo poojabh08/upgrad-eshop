@@ -8,6 +8,7 @@ import { EditProduct } from './components/AddEditProduct';
 import Navbar from './components/Navbar';
 import Login from './components/Login';
 import Signup from './components/Signup';
+import OrderProcess from './components/Order';
 import { AuthContextProvider } from './common/AuthContext';
 
 export default function App() {
@@ -32,7 +33,7 @@ export default function App() {
                     <Route path="/edit-product/:id" element={<PrivateRoute />}>
                         <Route path="/edit-product/:id" element={<EditProduct />} />
                     </Route>
-                    
+                    <Route path="/order" element={<OrderProcess />} />
             </Routes>
         </Router>
         </AuthContextProvider>
