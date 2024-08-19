@@ -62,7 +62,7 @@ export default function OrderProcess() {
     };
     return (
         <Box>
-            <Stepper activeStep={activeStep}>
+            {/* <Stepper activeStep={activeStep}>
                 {steps.map((label, index) => {
                     const stepProps = {};
                     const labelProps = {};
@@ -76,7 +76,7 @@ export default function OrderProcess() {
                         </Step>
                     );
                 })}
-            </Stepper>
+            </Stepper> */}
             {activeStep === steps.length - 2 && (
                 <React.Fragment>
                     <Typography>
