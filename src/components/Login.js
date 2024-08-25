@@ -20,12 +20,13 @@ const Login = () => {
         body: JSON.stringify({ username: email, password }),
       });
       if (response.ok) {
-        let tokenVar = response.headers.get("x-auth-token");
-        if (!tokenVar) {
-          tokenVar = 'eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJhZG1pbkBkZW1vLmNvbSIsImlhdCI6MTcyNDU3Mzk0MiwiZXhwIjoxNzI0NTgyMzQyfQ.5T02kioCb9YrVrbkB_G26SkokLKte3MWD78Bgng-rderiiIYQRa0Xlc2ccTma8lGE_Iy2hU9rGs23X32jAu77w';
-        }
-        const token = tokenVar;
-        tokenVar = null;
+        // let tokenVar = response.headers.get("x-auth-token");
+        // if (!tokenVar) {
+        //   tokenVar = 'eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJhZG1pbkBkZW1vLmNvbSIsImlhdCI6MTcyNDU3Mzk0MiwiZXhwIjoxNzI0NTgyMzQyfQ.5T02kioCb9YrVrbkB_G26SkokLKte3MWD78Bgng-rderiiIYQRa0Xlc2ccTma8lGE_Iy2hU9rGs23X32jAu77w';
+        // }
+        // const token = tokenVar;
+        // tokenVar = null;
+        const token = response.headers.get("x-auth-token");
         // console.log("Token received:", token); // Debugging
         if (token) {
           setAuthToken(token);
