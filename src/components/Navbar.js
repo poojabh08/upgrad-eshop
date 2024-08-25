@@ -1,4 +1,4 @@
-import React, { useContext } from "react";
+import React, { useContext, useState, useEffect } from "react";
 import { AppBar, Toolbar, IconButton, Typography, Button } from "@mui/material";
 import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
 import { Link, useNavigate } from "react-router-dom";
@@ -10,13 +10,18 @@ const Navbar = () => {
     useContext(AuthContext);
 
   const handleLogout = () => {
-    // Add your logout logic here
     localStorage.removeItem("authToken");
     setAuthToken(null);
     setUserId(null);
     setIsAdmin(false);
     history("/login");
   };
+
+  const [forceRender, setForceRender] = useState(false);
+
+  useEffect(() => {
+    setForceRender(!forceRender);
+  }, [authToken]);
 
   return (
     <AppBar position="static">

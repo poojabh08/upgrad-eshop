@@ -1,177 +1,293 @@
-import * as React from 'react';
+import {
+    Box,
+    Button,
+    Container,
+    createTheme,
+    Grid,
+    ThemeProvider
+} from '@mui/material';
 import CssBaseline from '@mui/material/CssBaseline';
 import TextField from '@mui/material/TextField';
-import Grid from '@mui/material/Grid';
-import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
-import Container from '@mui/material/Container';
-import { createTheme, ThemeProvider } from '@mui/material/styles';
-import { useState } from 'react';
 import axios from 'axios';
-import { useParams } from 'react-router-dom';
+import * as React from 'react';
+import { useContext, useEffect, useState } from 'react';
+import Select from 'react-select';
+import { AuthContext } from "../../common/AuthContext";
+import { AddressContext } from "../../common/AddressContext"; // Import AddressContext
 
-export default function AddAddress() {
-    const [formData, setFormData] = useState({
+const defaultTheme = createTheme();
+
+const AddAddress = () => {
+    const defaultFormData = {
         name: '',
         contactNumber: '',
         city: '',
         landmark: '',
         street: '',
         state: '',
-        zipCode: '',
-    });
-    const token = localStorage.getItem('token');
-    console.log(token);
+        zipcode: '',
+    };
+
+    const [formData, setFormData] = useState(defaultFormData);
+    const [savedAddresses, setSavedAddresses] = useState([]);
+    const [error, setError] = useState('');
+    const { authToken } = useContext(AuthContext);
+    const { selectedAddress, setSelectedAddress } = useContext(AddressContext); // Use AddressContext
+
+    const fetchSavedAddresses = async () => {
+        try {
+            console.log("Fetching saved addresses with token:", authToken);
+            const response = await axios.get('http://localhost:8080/api/addresses', {
+                headers: {
+                    'x-auth-token': authToken,
+                    'content-type': 'application/json',
+                },
+            });
+            console.log("Fetched addresses:", response.data);
+            setSavedAddresses(response.data);
+        } catch (error) {
+            console.error('Error fetching saved addresses:', error.response || error.message);
+            setError('Failed to fetch saved addresses');
+        }
+    };
+
+    useEffect(() => {
+        if (authToken) {
+            fetchSavedAddresses();
+        } else {
+            console.error('No auth token found');
+            setError('No auth token found');
+        }
+    }, [authToken]);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
-        setFormData((prevData) => ({
-            ...prevData,
-            [name]: value,
-        }));
+        setFormData((prevData) => ({ ...prevData, [name]: value }));
     };
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
+    const handleSaveAddress = async (e) => {
+        e.preventDefault(); // Prevent default form submission
 
-        const {
-            name,
-            contactNumber,
-            city,
-            landmark,
-            street,
-            state,
-            zipCode,
-        } = formData;
+        if (!selectedAddress) {
+            setError('Please select an address!');
+            return;
+        }
+
+        const { name, contactNumber, city, landmark, street, state, zipcode } = formData;
 
         if (contactNumber.length !== 10) {
             alert('Enter a valid 10-digit contact number');
             return;
         }
 
-        const url = 'http://localhost:3001/api/v1/addresses';
+        const addressExists = savedAddresses.some(addr =>
+            Object.keys(formData).every(key => addr[key] === formData[key])
+        );
+
+        if (addressExists) {
+            alert('Address already exists');
+            return;
+        }
+
         try {
-            const response = await axios.post(
-                url,
-                {
-                    name: name,
-                    contactNumber: contactNumber,
-                    city: city,
-                    landmark: landmark,
-                    street: street,
-                    state: state,
-                    zipCode: zipCode,
+            console.log("Saving address with token:", authToken);
+            const response = await axios.post('http://localhost:8080/api/addresses', formData, {
+                headers: {
+                    'x-auth-token': authToken,
+                    'content-type': 'application/json',
                 },
-                {
-                    headers: {
-                        'x-auth-token': `${token}`,
-                        "content-type": "application/json",
-                    },
-                }
-            );
+            });
             if (response.data) {
                 window.alert('Success');
+                fetchSavedAddresses();
+            }
+            else {
+                alert('Failure in saving the address');
             }
         } catch (error) {
-            console.error(error);
-            window.alert('Error');
+            console.error('Error saving address:', error.response || error.message);
+            setError('Failed to save address');
         }
 
-        // Reset the form values
-        setFormData({
-            name: '',
-            contactNumber: '',
-            city: '',
-            landmark: '',
-            street: '',
-            state: '',
-            zipCode: '',
-        });
-    }
-
-    const handleKeyDown = (event) => {
-        if (event.keyCode === 13) {
-            handleSubmit(event);
-        }
+        setFormData(defaultFormData);
+        setError('');
     };
 
     return (
-        <div>
-            <h1>Add address here</h1>
-            <form onSubmit={handleSubmit}>
-                <div>
-                    <label htmlFor="name">Name:</label>
-                    <input
-                        type="text"
-                        id="name"
-                        name="name"
-                        value={formData.name}
-                        onChange={handleChange}
+        <ThemeProvider theme={defaultTheme}>
+            <CssBaseline />
+            <Container component="main" maxWidth="xs">
+                <Box
+                    sx={{
+                        marginTop: 10,
+                        marginLeft: '-25%',
+                        marginRight: '-25%',
+                        width: '150%', // Adjust the width as needed
+                        textAlign: 'left', // Center the content horizontally
+                    }}
+                >
+                    <Typography variant="p">Select Address</Typography>
+                    <Select
+                        className="basic-single"
+                        classNamePrefix="select"
+                        name="address"
+                        getOptionLabel={(item) => item.name}
+                        getOptionValue={(item) => item.id}
+                        options={savedAddresses}
+                        value={selectedAddress}
+                        onChange={(selectedOption) => setSelectedAddress(selectedOption)}
                     />
-                </div>
-                <div>
-                    <label htmlFor="contactNumber">Contact Number:</label>
-                    <input
-                        type="number"
-                        id="contactNumber"
-                        name="contactNumber"
-                        value={formData.contactNumber}
-                        onChange={handleChange}
-                    />
-                </div>
-                <div>
-                    <label htmlFor="city">City:</label>
-                    <input
-                        type="text"
-                        id="city"
-                        name="city"
-                        value={formData.city}
-                        onChange={handleChange}
-                    />
-                </div>
-                <div>
-                    <label htmlFor="landmark">Landmark:</label>
-                    <input
-                        type="text"
-                        id="landmark"
-                        name="landmark"
-                        value={formData.landmark}
-                        onChange={handleChange}
-                    />
-                </div>
-                <div>
-                    <label htmlFor="street">Street:</label>
-                    <input
-                        type="text"
-                        id="street"
-                        name="street"
-                        value={formData.street}
-                        onChange={handleChange}
-                    />
-                </div>
-                <div>
-                    <label htmlFor="state">State:</label>
-                    <input
-                        type="text"
-                        id="state"
-                        name="state"
-                        value={formData.state}
-                        onChange={handleChange}
-                    />
-                </div>
-                <div>
-                    <label htmlFor="zipCode">ZipCode:</label>
-                    <input
-                        type="text"
-                        id="zipCode"
-                        name="zipCode"
-                        value={formData.zipCode}
-                        onChange={handleChange}
-                    />
-                </div>
-                {/* Repeat similar blocks for other fields */}
-                <button type="submit">Submit</button>
-            </form>
-        </div>
+                </Box>
+                <Box
+                    sx={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        width: '100%',
+                    }}
+                >
+                    <p className="orSeparator">-OR-</p>
+                </Box>
+                <Box
+                    component="form"
+                    sx={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        width: '100%',
+                    }}
+                >
+                    <Typography
+                        gutterBottom variant="h6"
+                        component="div"
+                        sx={{
+                            textAlign: 'center',
+                        }}
+                    >
+                        Add Address
+                    </Typography>
+                    <Grid container spacing={2}>
+                        <Grid item xs={12}>
+                            <TextField
+                                required
+                                fullWidth
+                                id="name"
+                                label="Full Name"
+                                name="name"
+                                autoComplete="name"
+                                value={formData.name}
+                                inputProps={{
+                                    maxLength: 255,
+                                    minLength: 5,
+                                }}
+                                onChange={handleChange}
+                            />
+                        </Grid>
+                        <Grid item xs={12}>
+                            <TextField
+                                required
+                                fullWidth
+                                name="contactNumber"
+                                label="Contact Number"
+                                type="tel"
+                                id="contactNumber"
+                                autoComplete="contactNumber"
+                                value={formData.contactNumber}
+                                onChange={handleChange}
+                            />
+                        </Grid>
+                        <Grid item xs={12}>
+                            <TextField
+                                required
+                                fullWidth
+                                id="city"
+                                label="City"
+                                name="city"
+                                value={formData.city}
+                                inputProps={{
+                                    maxLength: 255,
+                                    minLength: 5,
+                                }}
+                                onChange={handleChange}
+                            />
+                        </Grid>
+                        <Grid item xs={12}>
+                            <TextField
+                                required
+                                fullWidth
+                                id="landmark"
+                                label="Landmark"
+                                name="landmark"
+                                value={formData.landmark}
+                                inputProps={{
+                                    maxLength: 255,
+                                    minLength: 5,
+                                }}
+                                onChange={handleChange}
+                            />
+                        </Grid>
+                        <Grid item xs={12}>
+                            <TextField
+                                required
+                                fullWidth
+                                id="street"
+                                label="Street"
+                                name="street"
+                                value={formData.street}
+                                inputProps={{
+                                    maxLength: 255,
+                                    minLength: 5,
+                                }}
+                                onChange={handleChange}
+                            />
+                        </Grid>
+                        <Grid item xs={12}>
+                            <TextField
+                                required
+                                fullWidth
+                                id="state"
+                                label="State"
+                                name="state"
+                                value={formData.state}
+                                inputProps={{
+                                    maxLength: 255,
+                                    minLength: 5,
+                                }}
+                                onChange={handleChange}
+                            />
+                        </Grid>
+                        <Grid item xs={12}>
+                            <TextField
+                                required
+                                fullWidth
+                                id="zipcode"
+                                label="Zip Code"
+                                name="zipcode"
+                                value={formData.zipcode}
+                                inputProps={{
+                                    maxLength: 255,
+                                    minLength: 5,
+                                }}
+                                onChange={handleChange}
+                            />
+                        </Grid>
+                        <Grid item xs={12}>
+                            <Button
+                                variant="contained"
+                                color="primary"
+                                type="submit"
+                                sx={{ mt: 2, width: "100%" }}
+                                onClick={() => handleSaveAddress()}
+                            >
+                                Save Address
+                            </Button>
+                        </Grid>
+                    </Grid>
+                </Box>
+            </Container>
+        </ThemeProvider>
     );
 }
+
+export default AddAddress;

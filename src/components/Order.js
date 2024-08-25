@@ -1,104 +1,187 @@
+import * as React from 'react';
+import { useContext } from 'react';
 import Box from '@mui/material/Box';
-import Button from '@mui/material/Button';
+import Stepper from '@mui/material/Stepper';
 import Step from '@mui/material/Step';
 import StepLabel from '@mui/material/StepLabel';
-import Stepper from '@mui/material/Stepper';
+import Button from '@mui/material/Button';
 import Typography from '@mui/material/Typography';
-import * as React from 'react';
-import { useNavigate } from 'react-router-dom';
 import Address from './address/Address';
-import ShowOrder from './show-order/show-order';
+import ShowOrder from './show-order/ShowOrder';
+import { useNavigate } from 'react-router-dom';
+import { Snackbar, Alert } from '@mui/material';
+import { AddressContext } from '../common/AddressContext';
 
-const steps = ['Add your Address', 'Your order details', 'Order Confirmed'];
+const steps = ['Items', 'Select Address', 'Confirm Order'];
 
-export default function OrderProcess() {
-    const [activeStep, setActiveStep] = React.useState(0);
-    const [skipped, setSkipped] = React.useState(new Set());
-    const navigate = useNavigate()
+export default function HorizontalLinearStepper() {
+  const [activeStep, setActiveStep] = React.useState(1); // Start at 'Select Address'
+  const [skipped, setSkipped] = React.useState(new Set());
+  const [openSnackbar, setOpenSnackbar] = React.useState(false);
+  const [snackbarMessage, setSnackbarMessage] = React.useState('');
+  const [snackbarSeverity, setSnackbarSeverity] = React.useState('success');
+  const { selectedAddress, setSelectedAddress } = useContext(AddressContext); // Use selectedAddress from context
+  const navigate = useNavigate();
 
-    const isStepOptional = (step) => {
-        return step === 1;
-    };
+  const isStepOptional = (step) => {
+    return step === 1;
+  };
 
-    const isStepSkipped = (step) => {
-        return skipped.has(step);
-    };
+  const isStepSkipped = (step) => {
+    return skipped.has(step);
+  };
 
-    const handleNext = () => {
-        let newSkipped = skipped;
-        if (isStepSkipped(activeStep)) {
-            newSkipped = new Set(newSkipped.values());
-            newSkipped.delete(activeStep);
-        }
+  const handleNext = () => {
+    if (activeStep === 1 && !selectedAddress) {
+      setSnackbarMessage('Please select an address!');
+      setSnackbarSeverity('error');
+      setOpenSnackbar(true);
+      return;
+    }
 
-        setActiveStep((prevActiveStep) => prevActiveStep + 1);
-        setSkipped(newSkipped);
-    };
+    let newSkipped = skipped;
+    if (isStepSkipped(activeStep)) {
+      newSkipped = new Set(newSkipped.values());
+      newSkipped.delete(activeStep);
+    }
 
-    const handleBack = () => {
-        setActiveStep((prevActiveStep) => prevActiveStep - 1);
-    };
+    setActiveStep((prevActiveStep) => prevActiveStep + 1);
+    setSkipped(newSkipped);
 
-    const handleSkip = () => {
-        if (!isStepOptional(activeStep)) {
-            throw new Error("You can't skip a step that isn't optional.");
-        }
+    if (activeStep === steps.length - 1) {
+      setSnackbarMessage('Order Placed Successfully');
+      setSnackbarSeverity('success');
+      setOpenSnackbar(true);
+      setTimeout(() => {
+        setSelectedAddress(null);
+        navigate('/Products');
+      }, 2000); // Redirect after 2 seconds
+    }
+  };
 
-        setActiveStep((prevActiveStep) => prevActiveStep + 1);
-        setSkipped((prevSkipped) => {
-            const newSkipped = new Set(prevSkipped.values());
-            newSkipped.add(activeStep);
-            return newSkipped;
-        });
-    };
+  const handleBack = () => {
+    if (activeStep === 1) {
+      navigate('/Products');
+    } else {
+      setActiveStep((prevActiveStep) => prevActiveStep - 1);
+    }
+  };
 
-    const handleReset = () => {
-        setActiveStep(0);
-    };
-    const handleKeyDown = (event) => {
-        if (event.keyCode === 13) {
-            handleNext(event);
-        }
-    };
-    return (
-        <Box>
-            {/* <Stepper activeStep={activeStep}>
-                {steps.map((label, index) => {
-                    const stepProps = {};
-                    const labelProps = {};
+  const handleSkip = () => {
+    if (!isStepOptional(activeStep)) {
+      throw new Error("You can't skip a step that isn't optional.");
+    }
 
-                    if (isStepSkipped(index)) {
-                        stepProps.completed = false;
-                    }
-                    return (
-                        <Step key={label} {...stepProps}>
-                            <StepLabel {...labelProps}>{label}</StepLabel>
-                        </Step>
-                    );
-                })}
-            </Stepper> */}
-            {activeStep === steps.length - 2 && (
-                <React.Fragment>
-                    <Typography>
-                        <ShowOrder />
-                    </Typography>
-                </React.Fragment>
-            )}
-            {activeStep === steps.length - 3 && (
-                <React.Fragment>
-                    <Typography>
-                        <Address />
-                        <div>Press enter to add the address and then click on next </div>
-                    </Typography>
-                </React.Fragment>
-            )}
-            {activeStep === steps.length - 1 && (
-                <React.Fragment>
-                    <Typography >
-                        Your order is confirmed.
-                    </Typography>
-                </React.Fragment>
-            )}
-        </Box>
-    );
+    setActiveStep((prevActiveStep) => prevActiveStep + 1);
+    setSkipped((prevSkipped) => {
+      const newSkipped = new Set(prevSkipped.values());
+      newSkipped.add(activeStep);
+      return newSkipped;
+    });
+  };
+
+  const handleReset = () => {
+    setActiveStep(0);
+  };
+
+  const handleKeyDown = (event) => {
+    if (event.keyCode === 13) {
+      handleNext(event);
+    }
+  };
+
+  const handleCloseSnackbar = () => {
+    setOpenSnackbar(false);
+  };
+
+  return (
+    <Box
+      sx={{
+        width: '100%',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: "space-between",
+        paddingInline: '6.7rem',
+      }}
+    >
+      <Stepper activeStep={activeStep} sx={{ width: '100%' }}>
+        {steps.map((label, index) => {
+          const stepProps = {};
+          const labelProps = {};
+
+          if (isStepSkipped(index)) {
+            stepProps.completed = false;
+          }
+          if (index === 0) {
+            stepProps.completed = true;
+          }
+          return (
+            <Step key={label} {...stepProps}>
+              <StepLabel {...labelProps}>{label}</StepLabel>
+            </Step>
+          );
+        })}
+      </Stepper>
+      {activeStep === 1 && (
+        <React.Fragment>
+          <Typography>
+            <Address />
+          </Typography>
+        </React.Fragment>
+      )}
+      {activeStep === 2 && (
+        <React.Fragment>
+          <Typography>
+            <ShowOrder />
+          </Typography>
+        </React.Fragment>
+      )}
+      {activeStep === steps.length ? (
+        <React.Fragment>
+          <Typography sx={{ mt: -40, mb: 38 }}>Thank You</Typography>
+        </React.Fragment>
+      ) : (
+        <React.Fragment>
+          <Box sx={{ display: 'flex', flexDirection: 'row', pt: 2 }}>
+            <Button
+              color="inherit"
+              onClick={handleBack}
+              sx={{ mr: 1 }}
+            >
+              Back
+            </Button>
+            <Box sx={{ flex: '1 1 auto' }} onKeyDown={handleKeyDown} />
+            <Button
+              onClick={handleNext}
+              variant="contained"
+              color="primary"
+            >
+              {activeStep === steps.length - 1 ? 'Place Order' : 'Next'}
+            </Button>
+          </Box>
+        </React.Fragment>
+      )}
+      <Snackbar
+        open={openSnackbar}
+        autoHideDuration={2000}
+        onClose={handleCloseSnackbar}
+        anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+      >
+        <Alert
+          onClose={handleCloseSnackbar}
+          severity={snackbarSeverity}
+          sx={{
+            width: '100%',
+            bgcolor: snackbarSeverity === 'success' ? '#07BC0B' : '#E64C3B',
+            color: snackbarSeverity === 'success' ? '#FFFFFF' : '#FFFFFF',
+            justifyContent: 'flex-start'
+          }}
+          icon={false} // Remove the tick mark
+        >
+          {snackbarMessage}
+        </Alert>
+      </Snackbar>
+    </Box>
+  );
 }
