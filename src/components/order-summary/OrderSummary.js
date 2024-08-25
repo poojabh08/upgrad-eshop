@@ -3,7 +3,7 @@ import { Box, Typography } from '@mui/material';
 import { OrderContext } from '../../common/OrderContext';
 import { AddressContext } from '../../common/AddressContext';
 
-const ShowOrder = () => {
+const OrderSummary = () => {
     const { order } = useContext(OrderContext);
     const { selectedAddress } = useContext(AddressContext);
     const {
@@ -24,14 +24,14 @@ const ShowOrder = () => {
         <Box
             sx={{
                 display: 'flex',
-                width: '178%', // Match the width of the Stepper
+                width: '100%', // Match the width of the Stepper
                 height: '25rem',
                 backgroundColor: '#FFFFFF',
                 padding: '1%',
                 borderRadius: '4px',
                 borderColor: '#FFFFFF',
                 marginTop: '1%',
-                marginLeft: '-40%', // Center align
+                marginLeft: '-1%', // Center align
                 marginRight: 'auto', // Center align
                 boxShadow: '0px 4px 6px rgba(0, 0, 0, 0.1)', // Shadow effect
             }}
@@ -122,57 +122,22 @@ const ShowOrder = () => {
                     <Typography
                         variant="h4"
                         component="div"
-                        sx={{ paddingBottom: '2%' }}
+                        sx={{ paddingBottom: '3%' }}
                     >
-                        Address Details:
-                    </Typography>
-                    <Typography
-                        variant="body1"
-                        component="div"
-                        sx={{ paddingBottom: '2%' }}
-                    >
-                        {name}
-                    </Typography>
-                    <Typography
-                        variant="body2"
-                        component="div"
-                        sx={{ paddingBottom: '2%' }}
-                    >
-                        {contactNumber}
-                    </Typography>
-                    <Typography
-                        variant="body2"
-                        component="div"
-                        sx={{ paddingBottom: '2%' }}
-                    >
-                        {street}, {city}
-                    </Typography>
-                    <Typography
-                        variant="body2"
-                        component="div"
-                        sx={{ paddingBottom: '2%' }}
-                    >
-                        {state}
-                    </Typography>
-                    <Typography
-                        variant="body2"
-                        component="div"
-                        sx={{ paddingBottom: '2%' }}
-                    >
-                        {zipcode}
+                        Address Details :
                     </Typography>
                     <div
                         variant="p"
                         component="div"
                     >
                         {selectedAddress && (
-                            <div>
+                            <>
                                 <Typography>{name}</Typography>
                                 <Typography>Contact Number: {contactNumber}</Typography>
                                 <Typography>{street}, {city}</Typography>
                                 <Typography>{state}</Typography>
                                 <Typography>{zipcode}</Typography>
-                            </div>
+                            </>
                         )}
                     </div>
                 </Box>
@@ -181,4 +146,4 @@ const ShowOrder = () => {
     );
 };
 
-export default ShowOrder;
+export default OrderSummary;

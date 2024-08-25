@@ -11,15 +11,15 @@ import Navbar from './components/Navbar';
 import { ProductDetailPage } from './components/ProductDetailPage';
 import { Products } from './components/Products';
 import Signup from './components/Signup';
-import OrderProcess from './components/show-order/order/Order';
+import OrderProcess from './components/order/Order';
 
 export default function App() {
 
 
     return (
         <AuthContextProvider>
-            <AddressProvider>
-                <OrderContextProvider>
+            <OrderContextProvider>
+                <AddressProvider>
                     <Router>
                         <Navbar />
                         <Routes>
@@ -40,8 +40,8 @@ export default function App() {
                             <Route path="/order" element={<OrderProcess />} />
                         </Routes>
                     </Router>
-                </OrderContextProvider>
-            </AddressProvider>
+                </AddressProvider>
+            </OrderContextProvider>
         </AuthContextProvider>
     );
 }

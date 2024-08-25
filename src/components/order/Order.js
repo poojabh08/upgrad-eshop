@@ -6,12 +6,12 @@ import Step from '@mui/material/Step';
 import StepLabel from '@mui/material/StepLabel';
 import Button from '@mui/material/Button';
 import Typography from '@mui/material/Typography';
-import Address from '../../address/Address';
-import ShowOrder from '../ShowOrder';
+import Address from '../address/Address';
+import OrderSummary from '../order-summary/OrderSummary';
 import { useNavigate } from 'react-router-dom';
 import { Snackbar, Alert } from '@mui/material';
-import { AddressContext } from '../../../common/AddressContext';
-import { OrderContext } from '../../../common/OrderContext';
+import { AddressContext } from '../../common/AddressContext';
+import { OrderContext } from '../../common/OrderContext';
 
 const steps = ['Items', 'Select Address', 'Confirm Order'];
 
@@ -55,6 +55,7 @@ export default function HorizontalLinearStepper() {
       setSnackbarSeverity('success');
       setOpenSnackbar(true);
       clearOrders();
+      setSelectedAddress(null);
 
       setTimeout(() => {
         setSelectedAddress(null);
@@ -140,6 +141,18 @@ export default function HorizontalLinearStepper() {
             );
           })}
         </Stepper>
+      </Box>
+      <Box
+        sx={{
+          width: '85%',
+          padding: '1rem',
+          borderColor: '#FFFFFF',
+          display: 'row',
+          flexDirection: "column",
+          marginRight: 'auto',
+          marginLeft: 'auto',
+        }}
+      >
         {
           activeStep === 1 && (
             <React.Fragment>
@@ -153,11 +166,21 @@ export default function HorizontalLinearStepper() {
           activeStep === 2 && (
             <React.Fragment>
               <Typography>
-                <ShowOrder />
+                <OrderSummary />
               </Typography>
             </React.Fragment>
           )
         }
+      </Box>
+      <Box
+        sx={{
+          width: '100%',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: "space-between",
+        }}
+      >
         {
           activeStep === steps.length ? (
             <React.Fragment>
@@ -185,27 +208,27 @@ export default function HorizontalLinearStepper() {
             </React.Fragment>
           )
         }
-        <Snackbar
-          open={openSnackbar}
-          autoHideDuration={2000}
+      </Box>
+      <Snackbar
+        open={openSnackbar}
+        autoHideDuration={2000}
+        onClose={handleCloseSnackbar}
+        anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+      >
+        <Alert
           onClose={handleCloseSnackbar}
-          anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+          severity={snackbarSeverity}
+          sx={{
+            width: '100%',
+            bgcolor: snackbarSeverity === 'success' ? '#07BC0B' : '#E64C3B',
+            color: snackbarSeverity === 'success' ? '#FFFFFF' : '#FFFFFF',
+            justifyContent: 'flex-start'
+          }}
+          icon={false} // Remove the tick mark
         >
-          <Alert
-            onClose={handleCloseSnackbar}
-            severity={snackbarSeverity}
-            sx={{
-              width: '100%',
-              bgcolor: snackbarSeverity === 'success' ? '#07BC0B' : '#E64C3B',
-              color: snackbarSeverity === 'success' ? '#FFFFFF' : '#FFFFFF',
-              justifyContent: 'flex-start'
-            }}
-            icon={false} // Remove the tick mark
-          >
-            {snackbarMessage}
-          </Alert>
-        </Snackbar>
-      </Box >
-    </div>
+          {snackbarMessage}
+        </Alert>
+      </Snackbar>
+    </div >
   );
 }
