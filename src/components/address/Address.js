@@ -4,7 +4,7 @@ import {
     Container,
     createTheme,
     Grid,
-    ThemeProvider
+    ThemeProvider,
 } from '@mui/material';
 import CssBaseline from '@mui/material/CssBaseline';
 import TextField from '@mui/material/TextField';
@@ -13,8 +13,8 @@ import axios from 'axios';
 import * as React from 'react';
 import { useContext, useEffect, useState } from 'react';
 import Select from 'react-select';
-import { AuthContext } from "../../common/AuthContext";
-import { AddressContext } from "../../common/AddressContext"; // Import AddressContext
+import { AuthContext } from '../../common/AuthContext';
+import { AddressContext } from '../../common/AddressContext'; // Import AddressContext
 
 const defaultTheme = createTheme();
 
@@ -37,17 +37,20 @@ const AddAddress = () => {
 
     const fetchSavedAddresses = async () => {
         try {
-            console.log("Fetching saved addresses with token:", authToken);
+            console.log('Fetching saved addresses with token:', authToken);
             const response = await axios.get('http://localhost:8080/api/addresses', {
                 headers: {
                     'x-auth-token': authToken,
                     'content-type': 'application/json',
                 },
             });
-            console.log("Fetched addresses:", response.data);
+            console.log('Fetched addresses:', response.data);
             setSavedAddresses(response.data);
         } catch (error) {
-            console.error('Error fetching saved addresses:', error.response || error.message);
+            console.error(
+                'Error fetching saved addresses:',
+                error.response || error.message
+            );
             setError('Failed to fetch saved addresses');
         }
     };
@@ -68,41 +71,35 @@ const AddAddress = () => {
 
     const handleSaveAddress = async (e) => {
         e.preventDefault(); // Prevent default form submission
-
-        if (!selectedAddress) {
-            setError('Please select an address!');
-            return;
-        }
-
-        const { name, contactNumber, city, landmark, street, state, zipcode } = formData;
-
+        const { contactNumber } =
+            formData;
         if (contactNumber.length !== 10) {
             alert('Enter a valid 10-digit contact number');
             return;
         }
-
-        const addressExists = savedAddresses.some(addr =>
-            Object.keys(formData).every(key => addr[key] === formData[key])
+        const addressExists = savedAddresses.some((addr) =>
+            Object.keys(formData).every((key) => addr[key] === formData[key])
         );
 
         if (addressExists) {
             alert('Address already exists');
             return;
         }
-
         try {
-            console.log("Saving address with token:", authToken);
-            const response = await axios.post('http://localhost:8080/api/addresses', formData, {
-                headers: {
-                    'x-auth-token': authToken,
-                    'content-type': 'application/json',
-                },
-            });
+            const response = await axios.post(
+                'http://localhost:8080/api/addresses',
+                formData,
+                {
+                    headers: {
+                        'x-auth-token': authToken,
+                        'content-type': 'application/json',
+                    },
+                }
+            );
             if (response.data) {
                 window.alert('Success');
                 fetchSavedAddresses();
-            }
-            else {
+            } else {
                 alert('Failure in saving the address');
             }
         } catch (error) {
@@ -120,7 +117,7 @@ const AddAddress = () => {
             <Container component="main" maxWidth="xs">
                 <Box
                     sx={{
-                        marginTop: 10,
+                        marginTop: '5%',
                         marginLeft: '-25%',
                         marginRight: '-25%',
                         width: '150%', // Adjust the width as needed
@@ -132,6 +129,7 @@ const AddAddress = () => {
                         className="basic-single"
                         classNamePrefix="select"
                         name="address"
+                        backgroundColor="#FEFEFE"
                         getOptionLabel={(item) => item.name}
                         getOptionValue={(item) => item.id}
                         options={savedAddresses}
@@ -157,9 +155,11 @@ const AddAddress = () => {
                         alignItems: 'center',
                         width: '100%',
                     }}
+                // Add onSubmit handler to the form
                 >
                     <Typography
-                        gutterBottom variant="h6"
+                        gutterBottom
+                        variant="h6"
                         component="div"
                         sx={{
                             textAlign: 'center',
@@ -173,7 +173,7 @@ const AddAddress = () => {
                                 required
                                 fullWidth
                                 id="name"
-                                label="Full Name"
+                                label="Name"
                                 name="name"
                                 autoComplete="name"
                                 value={formData.name}
@@ -276,9 +276,9 @@ const AddAddress = () => {
                             <Button
                                 variant="contained"
                                 color="primary"
-                                type="submit"
-                                sx={{ mt: 2, width: "100%" }}
-                                onClick={() => handleSaveAddress()}
+                                type="submit" // Change to type="submit"
+                                sx={{ mt: 2, width: '100%' }}
+                                onClick={handleSaveAddress}
                             >
                                 Save Address
                             </Button>
@@ -288,6 +288,6 @@ const AddAddress = () => {
             </Container>
         </ThemeProvider>
     );
-}
+};
 
 export default AddAddress;
