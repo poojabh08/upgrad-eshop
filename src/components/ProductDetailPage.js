@@ -10,21 +10,30 @@ import {
   Button,
 } from "@mui/material";
 import { AuthContext } from "../common/AuthContext";
+import { OrderContext } from "../common/OrderContext";
 import { fetchProduct } from "../common/services/productService";
 import { Category } from "./Category";
 
 export const ProductDetailPage = () => {
   const { authToken } = useContext(AuthContext);
+  const { addToOrder } = useContext(OrderContext);
   const { id } = useParams();
   const [product, setProduct] = useState({});
   const [quantity, setQuantity] = useState(1);
   const [selectedCategory, setSelectedCategory] = useState("All");
   const navigate = useNavigate();
+
   useEffect(() => {
     fetchProduct(id, authToken).then((response) => {
       setProduct(response);
     });
   }, [authToken, id]);
+
+  const handleAddToOrder = () => {
+    addToOrder(product, quantity);
+    navigate("/order");
+  };
+
   return (
     <>
       <Container fixed>
@@ -41,7 +50,7 @@ export const ProductDetailPage = () => {
               style={{ width: "100%", height: "80%" }}
             />
           </ImageList>
-          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+
           <Box>
             <div className="nameContainer">
               <Typography gutterBottom variant="h5" component="p">
@@ -91,13 +100,9 @@ export const ProductDetailPage = () => {
               type="button"
               disabled={!(quantity >= 1)}
               sx={{ mt: 2 }}
-              onClick={() =>
-                navigate("/order", {
-                  state: { ...product, quantity: quantity },
-                })
-              }
+              onClick={handleAddToOrder}
             >
-              Place Order
+              Add to Cart
             </Button>
           </Box>
         </Box>
